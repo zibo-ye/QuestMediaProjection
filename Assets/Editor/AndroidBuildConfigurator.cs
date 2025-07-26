@@ -51,9 +51,17 @@ namespace MediaProjection.Editor
         [MenuItem("Build/Build Android APK")]
         public static void BuildAndroidAPK()
         {
+            BuildAndroidAPK("Quest3");
+        }
+        
+        public static void BuildAndroidAPK(string description)
+        {
             ConfigureAndroidSettings();
             
-            var outputPath = System.IO.Path.Combine(Application.dataPath, "..", "Build", "2.apk");
+            // Generate timestamp in the format YYYYMMDD_HHMMSS
+            var timestamp = System.DateTime.Now.ToString("yyyyMMdd_HHmmss");
+            var apkName = $"{timestamp}_{description}.apk";
+            var outputPath = System.IO.Path.Combine(Application.dataPath, "..", "Build", apkName);
             System.IO.Directory.CreateDirectory(System.IO.Path.GetDirectoryName(outputPath)!);
             
             var buildOptions = BuildOptions.Development | BuildOptions.AllowDebugging;
@@ -75,7 +83,7 @@ namespace MediaProjection.Editor
             if (report.summary.result == BuildResult.Succeeded)
             {
                 Debug.Log($"Build succeeded: {outputPath}");
-                EditorUtility.DisplayDialog("Build Complete", $"APK built successfully!\n\nOutput: {outputPath}", "OK");
+                EditorUtility.DisplayDialog("Build Complete", $"APK built successfully!\n\nFile: {apkName}\nOutput: {outputPath}", "OK");
             }
             else
             {
