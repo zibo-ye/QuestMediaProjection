@@ -10,6 +10,7 @@ namespace MediaProjection.Services
     {
         [SerializeField] private bool enableImageProcessing = true;
         [SerializeField] private bool enableWebRtc = false;
+        [SerializeField] private bool enableVideoRecording = true;
 
         private AndroidJavaObject? mediaProjectionCallback;
         private AndroidJavaObject? mediaProjectionManager;
@@ -17,6 +18,7 @@ namespace MediaProjection.Services
         private AndroidJavaObject? bitmapSaver;
 
         private MediaProjectionService? mediaProjectionService = null;
+        private VideoRecordingService? videoRecordingService = null;
 
         private List<BarcodeReaderService> barcodeReaderServices = new();
         private List<MlKitBarcodeReaderService> mlKitBarcodeReaderServices = new();
@@ -29,6 +31,19 @@ namespace MediaProjection.Services
             {
                 mediaProjectionService ??= new MediaProjectionService(imageProcessManager);
                 return mediaProjectionService;
+            }
+        }
+
+        public IVideoRecordingService VideoRecordingService
+        {
+            get
+            {
+                if (enableVideoRecording)
+                {
+                    videoRecordingService ??= new VideoRecordingService();
+                    return videoRecordingService;
+                }
+                throw new InvalidOperationException("Video recording is not enabled. Set enableVideoRecording to true.");
             }
         }
 
@@ -161,6 +176,9 @@ namespace MediaProjection.Services
 
             mlKitBarcodeReaderServices.ForEach(service => service.Dispose());
             mlKitBarcodeReaderServices.Clear();
+
+            videoRecordingService?.Dispose();
+            videoRecordingService = null;
 
             bitmapSaver?.Dispose();
             bitmapSaver = null;
