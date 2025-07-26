@@ -466,88 +466,80 @@ namespace MediaProjection.Testing
                 yield break;
             }
             
-            try
+            // Test start recording  
+            var initialState = recordingService.CurrentState;
+            if (initialState != RecordingState.Idle)
             {
-                // Test start recording
-                var initialState = recordingService.CurrentState;
-                if (initialState != RecordingState.Idle)
-                {
-                    LogMessage($"❌ Expected Idle state, got {initialState}");
-                    testsFailed++;
-                    yield break;
-                }
-                
-                bool startSuccess = recordingService.StartRecording(VideoRecordingConfig.Performance);
-                if (!startSuccess)
-                {
-                    LogMessage("❌ Failed to start recording");
-                    testsFailed++;
-                    yield break;
-                }
-                
-                // Wait for recording to start
-                float timeout = 10f;
-                float elapsed = 0f;
-                while (elapsed < timeout && recordingService.CurrentState != RecordingState.Recording)
-                {
-                    yield return new WaitForSeconds(0.1f);
-                    elapsed += 0.1f;
-                }
-                
-                if (recordingService.CurrentState != RecordingState.Recording)
-                {
-                    LogMessage($"❌ Recording didn't start within {timeout}s. State: {recordingService.CurrentState}");
-                    testsFailed++;
-                    yield break;
-                }
-                
-                LogMessage("✅ Recording started successfully");
-                
-                // Record for specified duration
-                yield return new WaitForSeconds(testRecordingDuration);
-                
-                // Test stop recording
-                bool stopSuccess = recordingService.StopRecording();
-                if (!stopSuccess)
-                {
-                    LogMessage("❌ Failed to stop recording");
-                    testsFailed++;
-                    yield break;
-                }
-                
-                // Wait for recording to stop
-                elapsed = 0f;
-                while (elapsed < timeout && recordingService.CurrentState != RecordingState.Idle)
-                {
-                    yield return new WaitForSeconds(0.1f);
-                    elapsed += 0.1f;
-                }
-                
-                if (recordingService.CurrentState != RecordingState.Idle)
-                {
-                    LogMessage($"❌ Recording didn't stop within {timeout}s. State: {recordingService.CurrentState}");
-                    testsFailed++;
-                    yield break;
-                }
-                
-                LogMessage("✅ Recording stopped successfully");
-                
-                // Check if output file exists
-                var outputFile = recordingService.CurrentOutputFile;
-                if (!string.IsNullOrEmpty(outputFile))
-                {
-                    LogMessage($"✅ Output file created: {System.IO.Path.GetFileName(outputFile)}");
-                    testsPassed++;
-                }
-                else
-                {
-                    LogMessage("❌ No output file created");
-                    testsFailed++;
-                }
+                LogMessage($"❌ Expected Idle state, got {initialState}");
+                testsFailed++;
+                yield break;
             }
-            catch (Exception e)
+            
+            bool startSuccess = recordingService.StartRecording(VideoRecordingConfig.Performance);
+            if (!startSuccess)
             {
-                LogMessage($"❌ Lifecycle test failed: {e.Message}");
+                LogMessage("❌ Failed to start recording");
+                testsFailed++;
+                yield break;
+            }
+            
+            // Wait for recording to start
+            float timeout = 10f;
+            float elapsed = 0f;
+            while (elapsed < timeout && recordingService.CurrentState != RecordingState.Recording)
+            {
+                yield return new WaitForSeconds(0.1f);
+                elapsed += 0.1f;
+            }
+            
+            if (recordingService.CurrentState != RecordingState.Recording)
+            {
+                LogMessage($"❌ Recording didn't start within {timeout}s. State: {recordingService.CurrentState}");
+                testsFailed++;
+                yield break;
+            }
+            
+            LogMessage("✅ Recording started successfully");
+            
+            // Record for specified duration
+            yield return new WaitForSeconds(testRecordingDuration);
+            
+            // Test stop recording
+            bool stopSuccess = recordingService.StopRecording();
+            if (!stopSuccess)
+            {
+                LogMessage("❌ Failed to stop recording");
+                testsFailed++;
+                yield break;
+            }
+            
+            // Wait for recording to stop
+            elapsed = 0f;
+            while (elapsed < timeout && recordingService.CurrentState != RecordingState.Idle)
+            {
+                yield return new WaitForSeconds(0.1f);
+                elapsed += 0.1f;
+            }
+            
+            if (recordingService.CurrentState != RecordingState.Idle)
+            {
+                LogMessage($"❌ Recording didn't stop within {timeout}s. State: {recordingService.CurrentState}");
+                testsFailed++;
+                yield break;
+            }
+            
+            LogMessage("✅ Recording stopped successfully");
+            
+            // Check if output file exists
+            var outputFile = recordingService.CurrentOutputFile;
+            if (!string.IsNullOrEmpty(outputFile))
+            {
+                LogMessage($"✅ Output file created: {System.IO.Path.GetFileName(outputFile)}");
+                testsPassed++;
+            }
+            else
+            {
+                LogMessage("❌ No output file created");
                 testsFailed++;
             }
         }
@@ -559,40 +551,32 @@ namespace MediaProjection.Testing
         {
             LogMessage("🧪 Test 5: Error Handling");
             
-            try
+            if (recordingService == null)
             {
-                if (recordingService == null)
-                {
-                    LogMessage("❌ Cannot test error handling - service unavailable");
-                    testsFailed++;
-                    yield break;
-                }
-                
-                // Test double start (should fail gracefully)
-                recordingService.StartRecording();
-                yield return new WaitForSeconds(0.5f);
-                
-                bool doubleStartResult = recordingService.StartRecording();
-                if (!doubleStartResult)
-                {
-                    LogMessage("✅ Double start properly rejected");
-                }
-                else
-                {
-                    LogMessage("❌ Double start should have been rejected");
-                }
-                
-                // Clean up
-                recordingService.StopRecording();
-                yield return new WaitForSeconds(1f);
-                
-                testsPassed++;
-            }
-            catch (Exception e)
-            {
-                LogMessage($"❌ Error handling test failed: {e.Message}");
+                LogMessage("❌ Cannot test error handling - service unavailable");
                 testsFailed++;
+                yield break;
             }
+            
+            // Test double start (should fail gracefully)
+            recordingService.StartRecording();
+            yield return new WaitForSeconds(0.5f);
+            
+            bool doubleStartResult = recordingService.StartRecording();
+            if (!doubleStartResult)
+            {
+                LogMessage("✅ Double start properly rejected");
+            }
+            else
+            {
+                LogMessage("❌ Double start should have been rejected");
+            }
+            
+            // Clean up
+            recordingService.StopRecording();
+            yield return new WaitForSeconds(1f);
+            
+            testsPassed++;
         }
         
         /// <summary>

@@ -166,17 +166,17 @@ namespace MediaProjection.Tests.Runtime
             bool recordingErrorCalled = false;
             
             // Subscribe to UnityEvents (simulating UI binding)
-            viewModel.onRecordingStateChanged.AddListener((state) => {
+            viewModel.OnRecordingStateChanged.AddListener((state) => {
                 stateChangedCalled = true;
                 Debug.Log($"State changed to: {state}");
             });
             
-            viewModel.onRecordingComplete.AddListener((path) => {
+            viewModel.OnRecordingComplete.AddListener((path) => {
                 recordingCompleteCalled = true;
                 Debug.Log($"Recording completed: {path}");
             });
             
-            viewModel.onRecordingError.AddListener((error) => {
+            viewModel.OnRecordingError.AddListener((error) => {
                 recordingErrorCalled = true;
                 Debug.Log($"Recording error: {error}");
             });
@@ -185,9 +185,9 @@ namespace MediaProjection.Tests.Runtime
             yield return new WaitForSeconds(0.5f);
             
             // Events should be properly wired (even if not called yet)
-            Assert.IsNotNull(viewModel.onRecordingStateChanged);
-            Assert.IsNotNull(viewModel.onRecordingComplete);
-            Assert.IsNotNull(viewModel.onRecordingError);
+            Assert.IsNotNull(viewModel.OnRecordingStateChanged);
+            Assert.IsNotNull(viewModel.OnRecordingComplete);
+            Assert.IsNotNull(viewModel.OnRecordingError);
             
             LogAssert.NoUnexpectedReceived();
         }
@@ -304,7 +304,7 @@ namespace MediaProjection.Tests.Runtime
         /// <summary>
         /// Performance test for ViewModel updates
         /// </summary>
-        [UnityTest, Performance]
+        [UnityTest]
         public IEnumerator VideoRecordingViewModel_Update_IsPerformant()
         {
             yield return new WaitForSeconds(0.1f);

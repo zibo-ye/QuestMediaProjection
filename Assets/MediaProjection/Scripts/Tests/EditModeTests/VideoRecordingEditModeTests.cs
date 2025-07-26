@@ -298,7 +298,7 @@ namespace MediaProjection.Tests.Editor
         /// <summary>
         /// Performance test for configuration creation
         /// </summary>
-        [Test, Performance]
+        [Test]
         public void VideoRecordingConfig_Creation_IsPerformant()
         {
             // Arrange

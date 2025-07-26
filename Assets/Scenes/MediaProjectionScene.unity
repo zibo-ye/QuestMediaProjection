@@ -138,7 +138,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &40919615
 Transform:
   m_ObjectHideFlags: 0
@@ -199,23 +199,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 219042850}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &65284393
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 65284398}
-  - component: {fileID: 65284399}
-  m_Layer: 0
-  m_Name: MlKitBarcodeReader
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
 --- !u!224 &65284394
 RectTransform:
   m_ObjectHideFlags: 0
@@ -298,53 +281,6 @@ Canvas:
   m_SortingLayerID: 0
   m_SortingOrder: 0
   m_TargetDisplay: 0
---- !u!4 &65284398
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 65284393}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 782628377}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &65284399
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 65284393}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e1a5fb84ef160c94aa0abc277b157683, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  mediaProjectionViewModel: {fileID: 782628378}
-  possibleFormats: 256
-  _barcodeRead:
-    m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 223974227}
-        m_TargetAssemblyTypeName: BarcodeHighlightController, Assembly-CSharp
-        m_MethodName: HighlightBarcode
-        m_Mode: 0
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
-  barcodeRead:
-    m_PersistentCalls:
-      m_Calls: []
 --- !u!1 &219042849
 GameObject:
   m_ObjectHideFlags: 0
@@ -376,58 +312,6 @@ Transform:
   m_Children:
   - {fileID: 47651889}
   m_Father: {fileID: 241186520}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &223974226
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 223974228}
-  - component: {fileID: 223974227}
-  m_Layer: 0
-  m_Name: BarcodeHighlight
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &223974227
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 223974226}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 30be42240f2d49f41820aec272cb2a98, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  targetCamera: {fileID: 1577749885}
-  lineMaterial: {fileID: 10306, guid: 0000000000000000f000000000000000, type: 0}
-  lineColor: {r: 1, g: 0, b: 0, a: 1}
-  lineWidth: 0.005
-  highlightDepth: 1
-  displayDuration: 0.2
-  centerOffset: {x: 510, y: 250}
-  pixelLengthRatio: 565
---- !u!4 &223974228
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 223974226}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 782628377}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &241186517
 PrefabInstance:
@@ -758,9 +642,6 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 1114040581}
-  - {fileID: 65284398}
-  - {fileID: 223974228}
   - {fileID: 40919615}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -806,74 +687,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 651187c95c733d7459e05e57e2c8f957, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!1 &1114040580
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1114040581}
-  - component: {fileID: 1114040582}
-  m_Layer: 0
-  m_Name: BarcodeReader
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 0
---- !u!4 &1114040581
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1114040580}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 782628377}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1114040582
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1114040580}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3217281631910494e806383ba00b4212, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  mediaProjectionViewModel: {fileID: 782628378}
-  possibleFormats: 2048
-  cropRequired: 0
-  cropRect:
-    x: 0
-    y: 0
-    width: 0
-    height: 0
-  tryHarder: 0
-  barcodeRead:
-    m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 223974227}
-        m_TargetAssemblyTypeName: BarcodeHighlightController, Assembly-CSharp
-        m_MethodName: HighlightBarcode
-        m_Mode: 0
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+  enableImageProcessing: 1
+  enableWebRtc: 0
+  enableVideoRecording: 1
 --- !u!1 &1452091273
 GameObject:
   m_ObjectHideFlags: 0

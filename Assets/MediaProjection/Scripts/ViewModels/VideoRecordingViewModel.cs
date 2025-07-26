@@ -40,6 +40,12 @@ namespace MediaProjection.ViewModels
         public RecordingState CurrentState => videoRecordingService?.CurrentState ?? RecordingState.Idle;
         public string? CurrentOutputFile => videoRecordingService?.CurrentOutputFile;
         
+        // Public event accessors for testing
+        public UnityEvent<RecordingState> OnRecordingStateChanged => onRecordingStateChanged;
+        public UnityEvent<string> OnRecordingComplete => onRecordingComplete;
+        public UnityEvent<string> OnRecordingError => onRecordingError;
+        public UnityEvent<float> OnRecordingProgress => onRecordingProgress;
+        
         // Service reference
         private IVideoRecordingService? videoRecordingService;
         

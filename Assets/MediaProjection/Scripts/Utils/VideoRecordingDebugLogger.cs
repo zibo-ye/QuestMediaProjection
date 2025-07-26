@@ -275,7 +275,7 @@ namespace MediaProjection.Utils
         public static void LogMemoryUsage(string context = "")
         {
             var gcMemory = GC.GetTotalMemory(false) / (1024 * 1024); // MB
-            var unityMemory = UnityEngine.Profiling.Profiler.GetTotalAllocatedMemory(UnityEngine.Profiling.Profiler.Area.Internal) / (1024 * 1024); // MB
+            var unityMemory = UnityEngine.Profiling.Profiler.GetTotalAllocatedMemoryLong() / (1024 * 1024); // MB
             
             LogInfo("Memory", $"{context}GC Memory: {gcMemory}MB, Unity Memory: {unityMemory}MB");
         }
