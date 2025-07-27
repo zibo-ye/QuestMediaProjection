@@ -1,6 +1,7 @@
 #nullable enable
 
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace MediaProjection.Services
@@ -134,6 +135,11 @@ namespace MediaProjection.Services
                     serviceIntent.Call<AndroidJavaObject>("putExtra", "extra_video_framerate", config.videoFrameRate);
                     serviceIntent.Call<AndroidJavaObject>("putExtra", "extra_output_directory", config.outputDirectory);
                     serviceIntent.Call<AndroidJavaObject>("putExtra", "extra_max_duration_ms", config.maxRecordingDurationMs);
+                    
+                    // Add new configuration parameters
+                    serviceIntent.Call<AndroidJavaObject>("putExtra", "videoCodec", config.videoFormat);
+                    serviceIntent.Call<AndroidJavaObject>("putExtra", "videoWidth", config.videoWidth);
+                    serviceIntent.Call<AndroidJavaObject>("putExtra", "videoHeight", config.videoHeight);
                     
                     // Start the foreground service
                     using (var contextCompat = new AndroidJavaClass("androidx.core.content.ContextCompat"))
@@ -317,6 +323,138 @@ namespace MediaProjection.Services
         }
         
         /// <summary>
+        /// Get available hardware-accelerated codecs on this device
+        /// </summary>
+        public CodecInfo[] GetAvailableCodecs()
+        {
+            if (videoRecordingManager == null)
+            {
+                Debug.LogWarning("VideoRecordingService: Not initialized, returning default codecs");
+                return new[] { CodecInfo.H264 };
+            }
+            
+            try
+            {
+                // Get available codecs from Android VideoRecordingManager
+                var codecArray = videoRecordingManager.Call<AndroidJavaObject>("getAvailableCodecs");
+                if (codecArray == null)
+                {
+                    return new[] { CodecInfo.H264 };
+                }
+                
+                var codecList = new List<CodecInfo>();
+                int arrayLength = codecArray.Call<int>("size");
+                
+                for (int i = 0; i < arrayLength; i++)
+                {
+                    var codecObj = codecArray.Call<AndroidJavaObject>("get", i);
+                    var displayName = codecObj.Call<string>("getDisplayName");
+                    var mimeType = codecObj.Call<string>("getMimeType");
+                    
+                    // Convert to Unity CodecInfo
+                    if (TryParseCodec(mimeType, displayName, out var codecInfo))
+                    {
+                        codecList.Add(codecInfo);
+                    }
+                }
+                
+                return codecList.Count > 0 ? codecList.ToArray() : new[] { CodecInfo.H264 };
+                
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"VideoRecordingService: Error getting available codecs - {e.Message}");
+                return new[] { CodecInfo.H264 };
+            }
+        }
+        
+        /// <summary>
+        /// Get optimal VR recording resolutions for this device
+        /// </summary>
+        public ResolutionPreset[] GetOptimalResolutions()
+        {
+            if (videoRecordingManager == null)
+            {
+                return GetDefaultResolutions();
+            }
+            
+            try
+            {
+                // Get optimal resolutions from Android VideoRecordingManager
+                var resolutionArray = videoRecordingManager.Call<AndroidJavaObject>("getOptimalResolutions");
+                if (resolutionArray == null)
+                {
+                    return GetDefaultResolutions();
+                }
+                
+                var resolutionList = new List<ResolutionPreset>();
+                int arrayLength = resolutionArray.Call<int>("size");
+                
+                for (int i = 0; i < arrayLength; i++)
+                {
+                    var resolutionObj = resolutionArray.Call<AndroidJavaObject>("get", i);
+                    var width = resolutionObj.Call<int>("first");
+                    var height = resolutionObj.Call<int>("second");
+                    
+                    resolutionList.Add(new ResolutionPreset
+                    {
+                        width = width,
+                        height = height,
+                        displayName = $"{width}x{height}"
+                    });
+                }
+                
+                return resolutionList.Count > 0 ? resolutionList.ToArray() : GetDefaultResolutions();
+                
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"VideoRecordingService: Error getting optimal resolutions - {e.Message}");
+                return GetDefaultResolutions();
+            }
+        }
+        
+        /// <summary>
+        /// Get recommended bitrate for the specified resolution and framerate
+        /// </summary>
+        public int GetRecommendedBitrate(int width, int height, int frameRate = 30)
+        {
+            if (videoRecordingManager == null)
+            {
+                return CalculateDefaultBitrate(width, height, frameRate);
+            }
+            
+            try
+            {
+                return videoRecordingManager.Call<int>("getRecommendedBitrate", width, height, frameRate);
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"VideoRecordingService: Error getting recommended bitrate - {e.Message}");
+                return CalculateDefaultBitrate(width, height, frameRate);
+            }
+        }
+        
+        /// <summary>
+        /// Create a custom recording configuration
+        /// </summary>
+        public VideoRecordingConfig CreateCustomConfig(CodecInfo codec, ResolutionPreset resolution, int bitrate, int frameRate = 30)
+        {
+            return new VideoRecordingConfig
+            {
+                videoBitrate = bitrate,
+                videoFrameRate = frameRate,
+                videoFormat = codec.mimeType,
+                videoWidth = resolution.width,
+                videoHeight = resolution.height,
+                audioEnabled = false,
+                outputDirectory = "",
+                maxRecordingDurationMs = -1L,
+                writeToFileWhileRecording = true
+            };
+        }
+        
+        /// <summary>
         /// Update method to poll recording status (fallback if callbacks don't work)
         /// This should be called from a MonoBehaviour's Update method
         /// </summary>
@@ -328,7 +466,7 @@ namespace MediaProjection.Services
             try
             {
                 // Poll the Android service for status updates
-                var stateString = videoRecordingManager.Call<string>("getRecordingState");
+                var stateString = videoRecordingManager.Call<string>("getRecordingStateString");
                 if (!string.IsNullOrEmpty(stateString))
                 {
                     HandleStateChange(stateString);
@@ -349,6 +487,66 @@ namespace MediaProjection.Services
             {
                 Debug.LogError($"VideoRecordingService: Error polling status - {e.Message}");
             }
+        }
+        
+        /// <summary>
+        /// Helper method to parse codec information from Android
+        /// </summary>
+        private bool TryParseCodec(string mimeType, string displayName, out CodecInfo codecInfo)
+        {
+            codecInfo = default;
+            
+            switch (mimeType?.ToLowerInvariant())
+            {
+                case "video/avc":
+                    codecInfo = CodecInfo.H264;
+                    return true;
+                case "video/hevc":
+                    codecInfo = CodecInfo.H265;
+                    return true;
+                case "video/x-vnd.on2.vp8":
+                    codecInfo = CodecInfo.VP8;
+                    return true;
+                case "video/x-vnd.on2.vp9":
+                    codecInfo = CodecInfo.VP9;
+                    return true;
+                default:
+                    Debug.LogWarning($"VideoRecordingService: Unknown codec MIME type - {mimeType}");
+                    return false;
+            }
+        }
+        
+        /// <summary>
+        /// Get default resolution presets for fallback
+        /// </summary>
+        private ResolutionPreset[] GetDefaultResolutions()
+        {
+            return new[]
+            {
+                ResolutionPreset.UHD4K,
+                ResolutionPreset.QHD,
+                ResolutionPreset.FHD,
+                ResolutionPreset.HD,
+                ResolutionPreset.UltraWideVR
+            };
+        }
+        
+        /// <summary>
+        /// Calculate default bitrate based on resolution and framerate
+        /// </summary>
+        private int CalculateDefaultBitrate(int width, int height, int frameRate)
+        {
+            // Base calculation: 1080p @ 30fps = 5 Mbps
+            const int basePixels = 1920 * 1080;
+            const int baseBitrate = 5_000_000;
+            const int baseFrameRate = 30;
+            
+            int pixels = width * height;
+            float scaleFactor = (float)pixels / basePixels * (float)frameRate / baseFrameRate;
+            int calculatedBitrate = Mathf.RoundToInt(baseBitrate * scaleFactor);
+            
+            // Clamp to reasonable range (1-50 Mbps)
+            return Mathf.Clamp(calculatedBitrate, 1_000_000, 50_000_000);
         }
         
         /// <summary>
