@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
@@ -419,12 +420,14 @@ namespace MediaProjection.Testing
             
             try
             {
-                // Test different presets
+                // Test different presets including frame rate validation
                 var configs = new[]
                 {
                     VideoRecordingConfig.Default,
                     VideoRecordingConfig.HighQuality,
-                    VideoRecordingConfig.Performance
+                    VideoRecordingConfig.Performance,
+                    VideoRecordingConfig.VR4K,
+                    VideoRecordingConfig.VRQHD
                 };
                 
                 foreach (var config in configs)
@@ -439,6 +442,36 @@ namespace MediaProjection.Testing
                         testsFailed++;
                         yield break;
                     }
+                }
+                
+                // Test frame rate presets
+                LogMessage("📊 Testing Frame Rate Presets:");
+                var frameRatePresets = FrameRateInfo.AllPresets;
+                foreach (var preset in frameRatePresets)
+                {
+                    if (preset.fps > 0 && !string.IsNullOrEmpty(preset.displayName))
+                    {
+                        LogMessage($"✅ Frame Rate: {preset.fps}fps - {preset.displayName}");
+                    }
+                    else
+                    {
+                        LogMessage($"❌ Invalid frame rate preset: {preset.fps}fps");
+                        testsFailed++;
+                        yield break;
+                    }
+                }
+                
+                // Validate VR frame rates are high enough
+                var vrPresets = frameRatePresets.Where(p => p.displayName.Contains("VR")).ToArray();
+                if (vrPresets.All(p => p.fps >= 72))
+                {
+                    LogMessage($"✅ VR frame rates meet minimum 72fps requirement");
+                }
+                else
+                {
+                    LogMessage($"❌ VR frame rates below 72fps requirement");
+                    testsFailed++;
+                    yield break;
                 }
                 
                 testsPassed++;

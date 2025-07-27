@@ -455,6 +455,38 @@ namespace MediaProjection.Services
         }
         
         /// <summary>
+        /// Get available frame rate presets for recording
+        /// </summary>
+        public FrameRateInfo[] GetAvailableFrameRates()
+        {
+            return FrameRateInfo.AllPresets;
+        }
+        
+        /// <summary>
+        /// Create a recording configuration with frame rate preset
+        /// </summary>
+        public VideoRecordingConfig CreateConfigWithFrameRate(FrameRatePreset frameRatePreset, ResolutionPreset? resolution = null, CodecInfo? codec = null)
+        {
+            var selectedResolution = resolution ?? ResolutionPreset.FHD;
+            var selectedCodec = codec ?? CodecInfo.H264;
+            var frameRate = (int)frameRatePreset;
+            var recommendedBitrate = GetRecommendedBitrate(selectedResolution.width, selectedResolution.height, frameRate);
+            
+            return new VideoRecordingConfig
+            {
+                videoBitrate = recommendedBitrate,
+                videoFrameRate = frameRate,
+                videoFormat = selectedCodec.mimeType,
+                videoWidth = selectedResolution.width,
+                videoHeight = selectedResolution.height,
+                audioEnabled = false,
+                outputDirectory = "",
+                maxRecordingDurationMs = -1L,
+                writeToFileWhileRecording = true
+            };
+        }
+        
+        /// <summary>
         /// Update method to poll recording status (fallback if callbacks don't work)
         /// This should be called from a MonoBehaviour's Update method
         /// </summary>

@@ -69,6 +69,77 @@ namespace MediaProjection.Services
     }
 
     /// <summary>
+    /// Standard frame rate presets for VR and high-quality recording
+    /// </summary>
+    public enum FrameRatePreset
+    {
+        Standard30 = 30,     // 30 FPS (Standard)
+        Cinema36 = 36,       // 36 FPS (Cinema+)
+        Smooth60 = 60,       // 60 FPS (Smooth)
+        VR72 = 72,           // 72 FPS (VR Standard)
+        High80 = 80,         // 80 FPS (High Performance)
+        VR90 = 90            // 90 FPS (VR Premium)
+    }
+
+    /// <summary>
+    /// Frame rate preset information with display name
+    /// </summary>
+    [Serializable]
+    public struct FrameRateInfo
+    {
+        public FrameRatePreset preset;
+        public int fps;
+        public string displayName;
+        
+        public static FrameRateInfo Standard30 => new FrameRateInfo 
+        { 
+            preset = FrameRatePreset.Standard30, 
+            fps = 30, 
+            displayName = "30 FPS (Standard)" 
+        };
+        
+        public static FrameRateInfo Cinema36 => new FrameRateInfo 
+        { 
+            preset = FrameRatePreset.Cinema36, 
+            fps = 36, 
+            displayName = "36 FPS (Cinema+)" 
+        };
+        
+        public static FrameRateInfo Smooth60 => new FrameRateInfo 
+        { 
+            preset = FrameRatePreset.Smooth60, 
+            fps = 60, 
+            displayName = "60 FPS (Smooth)" 
+        };
+        
+        public static FrameRateInfo VR72 => new FrameRateInfo 
+        { 
+            preset = FrameRatePreset.VR72, 
+            fps = 72, 
+            displayName = "72 FPS (VR Standard)" 
+        };
+        
+        public static FrameRateInfo High80 => new FrameRateInfo 
+        { 
+            preset = FrameRatePreset.High80, 
+            fps = 80, 
+            displayName = "80 FPS (High Performance)" 
+        };
+        
+        public static FrameRateInfo VR90 => new FrameRateInfo 
+        { 
+            preset = FrameRatePreset.VR90, 
+            fps = 90, 
+            displayName = "90 FPS (VR Premium)" 
+        };
+        
+        public static FrameRateInfo[] AllPresets => new[]
+        {
+            Standard30, Cinema36, Smooth60, VR72, High80, VR90
+        };
+    }
+
+    /// <summary>
     /// Recording resolution preset
     /// </summary>
     [Serializable]
@@ -123,12 +194,12 @@ namespace MediaProjection.Services
         };
         
         /// <summary>
-        /// Creates a VR-optimized 4K configuration
+        /// Creates a VR-optimized 4K configuration with 72fps
         /// </summary>
         public static VideoRecordingConfig VR4K => new VideoRecordingConfig
         {
-            videoBitrate = 25000000, // 25 Mbps
-            videoFrameRate = 30,     // 30 fps
+            videoBitrate = 60000000, // 60 Mbps (higher for VR 72fps)
+            videoFrameRate = 72,     // 72 fps (VR Standard)
             videoFormat = "video/avc", // H.264
             videoWidth = 3840,       // 4K width
             videoHeight = 2160,      // 4K height
@@ -139,12 +210,12 @@ namespace MediaProjection.Services
         };
         
         /// <summary>
-        /// Creates a VR-optimized QHD configuration with H.265
+        /// Creates a VR-optimized QHD configuration with H.265 and 90fps
         /// </summary>
         public static VideoRecordingConfig VRQHD => new VideoRecordingConfig
         {
-            videoBitrate = 15000000, // 15 Mbps
-            videoFrameRate = 30,     // 30 fps
+            videoBitrate = 45000000, // 45 Mbps (higher for VR 90fps)
+            videoFrameRate = 90,     // 90 fps (VR Premium)
             videoFormat = "video/hevc", // H.265
             videoWidth = 2560,       // QHD width
             videoHeight = 1440,      // QHD height
@@ -164,6 +235,22 @@ namespace MediaProjection.Services
             videoFormat = "video/avc", // H.264
             videoWidth = 1280,      // HD width
             videoHeight = 720,      // HD height
+            audioEnabled = false,
+            outputDirectory = "",
+            maxRecordingDurationMs = -1L,
+            writeToFileWhileRecording = true
+        };
+        
+        /// <summary>
+        /// Creates a high-quality configuration with 1080p resolution and high bitrate
+        /// </summary>
+        public static VideoRecordingConfig HighQuality => new VideoRecordingConfig
+        {
+            videoBitrate = 10000000, // 10 Mbps
+            videoFrameRate = 30,     // 30 fps
+            videoFormat = "video/avc", // H.264
+            videoWidth = 1920,       // FHD width
+            videoHeight = 1080,      // FHD height
             audioEnabled = false,
             outputDirectory = "",
             maxRecordingDurationMs = -1L,
@@ -266,6 +353,12 @@ namespace MediaProjection.Services
         ResolutionPreset[] GetOptimalResolutions();
         
         /// <summary>
+        /// Get available frame rate presets for recording
+        /// </summary>
+        /// <returns>Array of available frame rate presets</returns>
+        FrameRateInfo[] GetAvailableFrameRates();
+        
+        /// <summary>
         /// Get recommended bitrate for the specified resolution and framerate
         /// </summary>
         /// <param name="width">Video width in pixels</param>
@@ -283,5 +376,19 @@ namespace MediaProjection.Services
         /// <param name="frameRate">Frame rate (default: 30)</param>
         /// <returns>Configured VideoRecordingConfig</returns>
         VideoRecordingConfig CreateCustomConfig(CodecInfo codec, ResolutionPreset resolution, int bitrate, int frameRate = 30);
+        
+        /// <summary>
+        /// Create a recording configuration with frame rate preset
+        /// </summary>
+        /// <param name="frameRatePreset">Frame rate preset to use</param>
+        /// <param name="resolution">Recording resolution (optional)</param>
+        /// <param name="codec">Video codec (optional, defaults to H.264)</param>
+        /// <returns>Configured VideoRecordingConfig with optimal bitrate</returns>
+        VideoRecordingConfig CreateConfigWithFrameRate(FrameRatePreset frameRatePreset, ResolutionPreset? resolution = null, CodecInfo? codec = null);
+        
+        /// <summary>
+        /// Update the recording status (called periodically to sync with native layer)
+        /// </summary>
+        void UpdateRecordingStatus();
     }
 }
