@@ -4,10 +4,28 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 using MediaProjection.Services;
+
 
 namespace MediaProjection
 {
+    /// <summary>
+    /// Frame rate option for the dropdown
+    /// </summary>
+    [System.Serializable]
+    public struct FrameRateOption
+    {
+        public int frameRate;
+        public string displayName;
+        
+        public FrameRateOption(int fps, string name)
+        {
+            frameRate = fps;
+            displayName = name;
+        }
+    }
+
     /// <summary>
     /// Unity MonoBehaviour controller for video recording with configurable codec, resolution, and bitrate.
     /// This script provides a complete UI interface for VR screen recording with hardware acceleration.
@@ -18,22 +36,29 @@ namespace MediaProjection
         [SerializeField] private Button startRecordingButton = null!;
         [SerializeField] private Button stopRecordingButton = null!;
         [SerializeField] private Button queryCodecsButton = null!;
-        [SerializeField] private Dropdown codecDropdown = null!;
-        [SerializeField] private Dropdown resolutionDropdown = null!;
-        [SerializeField] private Dropdown bitrateDropdown = null!;
-        [SerializeField] private Text statusText = null!;
-        [SerializeField] private Text outputPathText = null!;
-        [SerializeField] private Text durationText = null!;
+        [SerializeField] private TMP_Dropdown codecDropdown = null!;
+        [SerializeField] private TMP_Dropdown resolutionDropdown = null!;
+        [SerializeField] private TMP_Dropdown bitrateDropdown = null!;
+        [SerializeField] private TMP_Dropdown frameRateDropdown = null!;
+        [SerializeField] private Button frameRateButton = null!;
+        [SerializeField] private TMP_Text statusText = null!;
+        [SerializeField] private TMP_Text outputPathText = null!;
+        [SerializeField] private TMP_Text durationText = null!;
         
         [Header("Recording Settings")]
         [SerializeField] private bool autoQueryCodecsOnStart = true;
-        [SerializeField] private int frameRate = 30;
         
         // Service and state
         private IVideoRecordingService? videoRecordingService;
         private CodecInfo[] availableCodecs = Array.Empty<CodecInfo>();
         private ResolutionPreset[] availableResolutions = Array.Empty<ResolutionPreset>();
         private int[] availableBitrates = Array.Empty<int>();
+        private FrameRateOption[] availableFrameRates = Array.Empty<FrameRateOption>();
+        
+        // OVR display frequency management
+        private float[] ovrDisplayFrequencies = Array.Empty<float>();
+        private int currentFrequencyIndex = 0;
+        private float currentDisplayFrequency = 90f; // Default fallback
         
         // Recording state
         private float recordingStartTime;
@@ -128,6 +153,16 @@ namespace MediaProjection
                 bitrateDropdown.onValueChanged.AddListener(OnBitrateChanged);
             }
             
+            if (frameRateDropdown != null)
+            {
+                frameRateDropdown.onValueChanged.AddListener(OnFrameRateChanged);
+            }
+            
+            if (frameRateButton != null)
+            {
+                frameRateButton.onClick.AddListener(CycleDisplayFrequency);
+            }
+            
             UpdateUI();
         }
         
@@ -148,7 +183,7 @@ namespace MediaProjection
                 
                 // Get available codecs and resolutions
                 availableCodecs = videoRecordingService.GetAvailableCodecs();
-                availableResolutions = videoRecordingService.GetOptimalResolutions();
+                availableResolutions = videoRecordingService.GetVRResolutions();
                 
                 // Setup bitrate options (1-50 Mbps)
                 availableBitrates = new int[]
@@ -162,10 +197,14 @@ namespace MediaProjection
                     50_000_000   // 50 Mbps
                 };
                 
+                // Setup frame rate options with OVR display frequencies
+                SetupFrameRateOptions();
+                
                 // Populate dropdowns
                 PopulateCodecDropdown();
                 PopulateResolutionDropdown();
                 PopulateBitrateDropdown();
+                PopulateFrameRateDropdown();
                 
                 UpdateStatusText($"Found {availableCodecs.Length} codecs, {availableResolutions.Length} resolutions");
                 
@@ -199,7 +238,7 @@ namespace MediaProjection
             {
                 var config = GetCurrentConfiguration();
                 
-                UpdateStatusText($"Starting recording: {config.videoWidth}x{config.videoHeight}, {config.videoBitrate / 1_000_000}Mbps, {GetSelectedCodec().displayName}");
+                UpdateStatusText($"Starting recording: {config.videoWidth}x{config.videoHeight}, {config.videoBitrate / 1_000_000}Mbps, {config.videoFrameRate}fps, {GetSelectedCodec().displayName}");
                 
                 bool success = videoRecordingService.StartRecording(config);
                 
@@ -255,7 +294,8 @@ namespace MediaProjection
             var selectedResolution = GetSelectedResolution();
             var selectedBitrate = GetSelectedBitrate();
             
-            return videoRecordingService!.CreateCustomConfig(selectedCodec, selectedResolution, selectedBitrate, frameRate);
+            var selectedFrameRate = GetSelectedFrameRate();
+            return videoRecordingService!.CreateCustomConfig(selectedCodec, selectedResolution, selectedBitrate, selectedFrameRate);
         }
         
         private CodecInfo GetSelectedCodec()
@@ -274,6 +314,12 @@ namespace MediaProjection
         {
             int index = bitrateDropdown?.value ?? 0;
             return availableBitrates.Length > index ? availableBitrates[index] : 5_000_000;
+        }
+        
+        private int GetSelectedFrameRate()
+        {
+            int index = frameRateDropdown?.value ?? 0;
+            return availableFrameRates.Length > index ? availableFrameRates[index].frameRate : 30;
         }
         
         private void PopulateCodecDropdown()
@@ -334,6 +380,147 @@ namespace MediaProjection
             bitrateDropdown.value = 2; // Default to 5 Mbps
         }
         
+        private void SetupFrameRateOptions()
+        {
+            // Get OVR display frequencies for the button cycling
+            InitializeOVRDisplayFrequencies();
+            
+            // Setup frame rate dropdown with [30, 60, currentFreq]
+            UpdateFrameRateDropdown();
+            
+            // Update frame rate button text
+            UpdateFrameRateButtonText();
+        }
+        
+        private void InitializeOVRDisplayFrequencies()
+        {
+            try
+            {
+                if(Application.platform == RuntimePlatform.Android && !Application.isEditor)
+                {
+                    // Get all available OVR display frequencies
+                    float[] displayFreqs = OVRManager.display.displayFrequenciesAvailable;
+                    float systemFreq = OVRPlugin.systemDisplayFrequency;
+
+                    if (displayFreqs != null && displayFreqs.Length > 0)
+                    {
+                        ovrDisplayFrequencies = displayFreqs;
+                        currentDisplayFrequency = systemFreq;
+
+                        // Find current frequency index
+                        currentFrequencyIndex = System.Array.FindIndex(ovrDisplayFrequencies, f => Mathf.Abs(f - systemFreq) < 0.1f);
+                        if (currentFrequencyIndex < 0) currentFrequencyIndex = 0;
+
+                        Debug.Log($"OVR Display Frequencies: [{string.Join(", ", displayFreqs)}], Current: {systemFreq}Hz");
+                    }
+                    else
+                    {
+                        // Fallback frequencies if OVR not available
+                        ovrDisplayFrequencies = new float[] { 72f, 80f, 90f, 120f };
+                        currentDisplayFrequency = 90f;
+                        currentFrequencyIndex = 2; // 90Hz
+                    }
+                }
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogWarning($"Failed to initialize OVR display frequencies: {e.Message}");
+                // Use fallback frequencies
+                ovrDisplayFrequencies = new float[] { 72f, 80f, 90f, 120f };
+                currentDisplayFrequency = 90f;
+                currentFrequencyIndex = 2; // 90Hz
+            }
+        }
+        
+        private void UpdateFrameRateDropdown()
+        {
+            var frameRateList = new List<FrameRateOption>();
+            
+            // Add standard frame rates: 30, 60
+            frameRateList.Add(new FrameRateOption(30, "30 FPS (Standard)"));
+            frameRateList.Add(new FrameRateOption(60, "60 FPS (Smooth)"));
+            
+            // Add current display frequency
+            int currentFps = Mathf.RoundToInt(currentDisplayFrequency);
+            if (currentFps != 30 && currentFps != 60) // Avoid duplicates
+            {
+                frameRateList.Add(new FrameRateOption(currentFps, $"{currentFps} FPS (Display)"));
+            }
+            
+            // Sort by frame rate
+            frameRateList.Sort((a, b) => a.frameRate.CompareTo(b.frameRate));
+            availableFrameRates = frameRateList.ToArray();
+        }
+        
+        private void PopulateFrameRateDropdown()
+        {
+            if (frameRateDropdown == null) return;
+            
+            frameRateDropdown.ClearOptions();
+            var options = new List<string>();
+            
+            foreach (var frameRateOption in availableFrameRates)
+            {
+                options.Add(frameRateOption.displayName);
+            }
+            
+            frameRateDropdown.AddOptions(options);
+            
+            // Default to current display frequency if available, otherwise 60 FPS
+            int defaultIndex = 0;
+            int currentFps = Mathf.RoundToInt(currentDisplayFrequency);
+            defaultIndex = System.Array.FindIndex(availableFrameRates, fr => fr.frameRate == currentFps);
+            if (defaultIndex < 0)
+            {
+                // Try to find 60 FPS as fallback
+                defaultIndex = System.Array.FindIndex(availableFrameRates, fr => fr.frameRate == 60);
+                if (defaultIndex < 0) defaultIndex = 0; // Fallback to first option
+            }
+            
+            frameRateDropdown.value = defaultIndex;
+        }
+        
+        private void UpdateFrameRateButtonText()
+        {
+            if (frameRateButton == null) return;
+            
+            TMP_Text buttonText = frameRateButton.GetComponentInChildren<TMP_Text>();
+            if (buttonText != null)
+            {
+                int currentFps = Mathf.RoundToInt(currentDisplayFrequency);
+                buttonText.text = $"{currentFps}Hz";
+            }
+        }
+        
+        private void CycleDisplayFrequency()
+        {
+            if (ovrDisplayFrequencies.Length == 0) return;
+            
+            // Cycle to next frequency
+            currentFrequencyIndex = (currentFrequencyIndex + 1) % ovrDisplayFrequencies.Length;
+            currentDisplayFrequency = ovrDisplayFrequencies[currentFrequencyIndex];
+            
+            Debug.Log($"Cycled to display frequency: {currentDisplayFrequency}Hz");
+            
+            try
+            {
+#if UNITY_ANDROID && !UNITY_EDITOR
+                // Actually set the display frequency in OVR
+                OVRPlugin.systemDisplayFrequency = currentDisplayFrequency;
+                Debug.Log($"Set OVR display frequency to: {currentDisplayFrequency}Hz");
+#endif
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogWarning($"Failed to set OVR display frequency: {e.Message}");
+            }
+            
+            // Update UI to reflect the change
+            UpdateFrameRateDropdown();
+            PopulateFrameRateDropdown();
+            UpdateFrameRateButtonText();
+        }
+        
         private void OnCodecChanged(int index)
         {
             if (availableCodecs.Length > index)
@@ -347,7 +534,8 @@ namespace MediaProjection
             if (availableResolutions.Length > index && videoRecordingService != null)
             {
                 var resolution = availableResolutions[index];
-                var recommendedBitrate = videoRecordingService.GetRecommendedBitrate(resolution.width, resolution.height, frameRate);
+                var selectedFrameRate = GetSelectedFrameRate();
+                var recommendedBitrate = videoRecordingService.GetRecommendedBitrate(resolution.width, resolution.height, selectedFrameRate);
                 
                 Debug.Log($"VideoRecordingController: Resolution changed to {resolution.displayName}, recommended bitrate: {recommendedBitrate / 1_000_000}Mbps");
                 
@@ -361,6 +549,14 @@ namespace MediaProjection
             if (availableBitrates.Length > index)
             {
                 Debug.Log($"VideoRecordingController: Bitrate changed to {availableBitrates[index] / 1_000_000}Mbps");
+            }
+        }
+        
+        private void OnFrameRateChanged(int index)
+        {
+            if (availableFrameRates.Length > index)
+            {
+                Debug.Log($"VideoRecordingController: Frame rate changed to {availableFrameRates[index].displayName}");
             }
         }
         

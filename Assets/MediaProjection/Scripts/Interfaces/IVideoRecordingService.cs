@@ -26,7 +26,8 @@ namespace MediaProjection.Services
         H264,   // video/avc
         H265,   // video/hevc
         VP8,    // video/x-vnd.on2.vp8
-        VP9     // video/x-vnd.on2.vp9
+        VP9,    // video/x-vnd.on2.vp9
+        AV1     // video/av01
     }
 
     /// <summary>
@@ -65,6 +66,13 @@ namespace MediaProjection.Services
             codec = SupportedCodec.VP9, 
             displayName = "VP9", 
             mimeType = "video/x-vnd.on2.vp9" 
+        };
+        
+        public static CodecInfo AV1 => new CodecInfo 
+        { 
+            codec = SupportedCodec.AV1, 
+            displayName = "AV1", 
+            mimeType = "video/av01" 
         };
     }
 
@@ -347,10 +355,10 @@ namespace MediaProjection.Services
         CodecInfo[] GetAvailableCodecs();
         
         /// <summary>
-        /// Get optimal VR recording resolutions for this device
+        /// Get VR-optimized recording resolutions for this device
         /// </summary>
-        /// <returns>Array of recommended resolution presets</returns>
-        ResolutionPreset[] GetOptimalResolutions();
+        /// <returns>Array of VR-optimized resolution presets</returns>
+        ResolutionPreset[] GetVRResolutions();
         
         /// <summary>
         /// Get available frame rate presets for recording

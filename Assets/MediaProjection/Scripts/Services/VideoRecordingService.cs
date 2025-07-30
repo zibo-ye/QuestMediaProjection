@@ -369,49 +369,12 @@ namespace MediaProjection.Services
         }
         
         /// <summary>
-        /// Get optimal VR recording resolutions for this device
+        /// Get VR-optimized recording resolutions for this device
         /// </summary>
-        public ResolutionPreset[] GetOptimalResolutions()
+        public ResolutionPreset[] GetVRResolutions()
         {
-            if (videoRecordingManager == null)
-            {
-                return GetDefaultResolutions();
-            }
-            
-            try
-            {
-                // Get optimal resolutions from Android VideoRecordingManager
-                var resolutionArray = videoRecordingManager.Call<AndroidJavaObject>("getOptimalResolutions");
-                if (resolutionArray == null)
-                {
-                    return GetDefaultResolutions();
-                }
-                
-                var resolutionList = new List<ResolutionPreset>();
-                int arrayLength = resolutionArray.Call<int>("size");
-                
-                for (int i = 0; i < arrayLength; i++)
-                {
-                    var resolutionObj = resolutionArray.Call<AndroidJavaObject>("get", i);
-                    var width = resolutionObj.Call<int>("first");
-                    var height = resolutionObj.Call<int>("second");
-                    
-                    resolutionList.Add(new ResolutionPreset
-                    {
-                        width = width,
-                        height = height,
-                        displayName = $"{width}x{height}"
-                    });
-                }
-                
-                return resolutionList.Count > 0 ? resolutionList.ToArray() : GetDefaultResolutions();
-                
-            }
-            catch (Exception e)
-            {
-                Debug.LogError($"VideoRecordingService: Error getting optimal resolutions - {e.Message}");
-                return GetDefaultResolutions();
-            }
+            // Return VR-specific resolutions defined by the Quest application
+            return GetVROptimizedResolutions();
         }
         
         /// <summary>
@@ -560,6 +523,34 @@ namespace MediaProjection.Services
                 ResolutionPreset.FHD,
                 ResolutionPreset.HD,
                 ResolutionPreset.UltraWideVR
+            };
+        }
+        
+        /// <summary>
+        /// Get VR-optimized resolution presets for Quest/VR applications
+        /// </summary>
+        private ResolutionPreset[] GetVROptimizedResolutions()
+        {
+            return new[]
+            {
+                // Premium VR resolutions
+                ResolutionPreset.UHD4K,                                  // 4K UHD (3840x2160) - Premium VR quality
+                ResolutionPreset.QHD,                                    // QHD (2560x1440) - High VR quality
+                
+                // Standard VR resolutions
+                ResolutionPreset.FHD,                                    // FHD (1920x1080) - Standard VR quality
+                ResolutionPreset.HD,                                     // HD (1280x720) - Performance VR mode
+                
+                // VR-specific ultra-wide formats
+                ResolutionPreset.UltraWideVR,                           // Ultra-wide VR (2048x1024) - 2:1 aspect ratio
+                new ResolutionPreset { width = 1024, height = 512, displayName = "Ultra-wide VR Low (1024x512)" }, // Lower res ultra-wide
+                
+                // High-resolution ultra-wide for premium VR
+                new ResolutionPreset { width = 4096, height = 2048, displayName = "Premium Ultra-wide VR (4096x2048)" }, // 2:1 premium
+                
+                // Square formats for specific VR applications
+                new ResolutionPreset { width = 2048, height = 2048, displayName = "Square VR (2048x2048)" },        // 1:1 aspect ratio
+                new ResolutionPreset { width = 1440, height = 1440, displayName = "Square VR Medium (1440x1440)" } // 1:1 medium
             };
         }
         
