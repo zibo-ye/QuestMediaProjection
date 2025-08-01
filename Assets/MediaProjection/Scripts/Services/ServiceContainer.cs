@@ -20,8 +20,6 @@ namespace MediaProjection.Services
         private MediaProjectionService? mediaProjectionService = null;
         private VideoRecordingService? videoRecordingService = null;
 
-        private List<BarcodeReaderService> barcodeReaderServices = new();
-        private List<MlKitBarcodeReaderService> mlKitBarcodeReaderServices = new();
 
         private string imageSaverFilenamePrefix = "";
 
@@ -50,25 +48,6 @@ namespace MediaProjection.Services
         public AndroidJavaObject? MediaProjectionManager => mediaProjectionManager;
         public event Action<AndroidJavaObject?>? MediaProjectionManagerChanged;
 
-        internal IBarcodeReaderService GetBarcodeReaderService(
-            IEnumerable<Models.BarcodeFormat> possibleFormats,
-            bool cropRequired,
-            RectInt cropRange,
-            bool tryHarder)
-        {
-            var barcodeReaderService = new BarcodeReaderService(imageProcessManager, possibleFormats, cropRequired, cropRange, tryHarder);
-            barcodeReaderServices.Add(barcodeReaderService);
-
-            return barcodeReaderService;
-        }
-
-        internal IMultipleBarcodeReaderService GetMlKitBarcodeReaderService(IEnumerable<Models.MlKitBarcodeFormat> possibleFormats)
-        {
-            var mlKitBarcodeReaderService = new MlKitBarcodeReaderService(imageProcessManager, possibleFormats);
-            mlKitBarcodeReaderServices.Add(mlKitBarcodeReaderService);
-
-            return mlKitBarcodeReaderService;
-        }
 
         public void RequestImageSaver(string filenamePrefix)
         {
@@ -120,8 +99,6 @@ namespace MediaProjection.Services
             }
             
             mediaProjectionService?.SetMediaProjectionManager(imageProcessManager);
-            barcodeReaderServices.ForEach(service => service.SetMediaProjectionManager(imageProcessManager));
-            mlKitBarcodeReaderServices.ForEach(service => service.SetMediaProjectionManager(imageProcessManager));
 
             RequestImageSaver(imageSaverFilenamePrefix);
 
@@ -133,8 +110,6 @@ namespace MediaProjection.Services
             Debug.Log("ServiceContainer.OnDisable");
 
             mediaProjectionService?.SetMediaProjectionManager(null);
-            barcodeReaderServices.ForEach(service => service.SetMediaProjectionManager(null));
-            mlKitBarcodeReaderServices.ForEach(service => service.SetMediaProjectionManager(null));
 
             Debug.Log("ServiceContainer.OnDisable: Disposing services");
 
@@ -171,11 +146,6 @@ namespace MediaProjection.Services
 
         private void OnDestroy()
         {
-            barcodeReaderServices.ForEach(service => service.Dispose());
-            barcodeReaderServices.Clear();
-
-            mlKitBarcodeReaderServices.ForEach(service => service.Dispose());
-            mlKitBarcodeReaderServices.Clear();
 
             videoRecordingService?.Dispose();
             videoRecordingService = null;

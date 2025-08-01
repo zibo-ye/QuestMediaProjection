@@ -3,8 +3,7 @@
 `Quest Media Projection Plugin for Unity` is a Unity plugin for capturing the Meta Quest screen using the MediaProjection API. This plugin provides four main features:  
 
 1. **Capture Screen as Texture2D**: Capture the Meta Quest screen and handle it as a `Texture2D` in Unity.  
-2. **Barcode Scanning**: Read specified barcodes from the captured screen using ZXing.  
-3. **Save Screen Captures**: Save the captured screen to storage.  
+2. **Save Screen Captures**: Save the captured screen to storage.  
 4. 🚀 **WebRTC Support (NEW in v1.3.0!)** 🚀 – Stream captured screen content in **real-time** using WebRTC for seamless remote viewing and communication.  
 
 ---
@@ -119,9 +118,6 @@ To do this:
         implementation 'androidx.appcompat:appcompat:1.6.1'
         implementation 'org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.2'
 
-        implementation 'com.google.zxing:core:3.5.3'  // Use this if you are using ZXing for barcode scanning
-
-        implementation 'com.google.mlkit:barcode-scanning:17.3.0'  // Use this if you are using Google ML Kit for barcode scanning
      }
      ```
 
@@ -162,82 +158,6 @@ To do this:
      ```
    - If you want to apply the texture to a material, attach the material and select `mainTexture` from the dropdown.
 
-### Reading Barcodes with Zxing
-
-1. Add the `BarcodeReaderViewModel` component to a suitable `GameObject` and attach the `MediaProjectionViewModel` component created in the basic setup to its `MediaProjectionViewModel` field.
-2. Select the barcodes to be read from the `PossibleFormats` list (multiple formats can be selected). 
-    <details><summary>Supported barcode formats:</summary>
-
-    - `AZTEC`
-    - `CODABAR`
-    - `CODE_128`
-    - `CODE_39`
-    - `CODE_93`
-    - `DATA_MATRIX`
-    - `EAN_13`
-    - `EAN_8`
-    - `ITF`
-    - `MAXICODE`
-    - `PDF_417`
-    - `QR_CODE`
-    - `RSS_14`
-    - `RSS_EXPANDED`
-    - `UPC_A`
-    - `UPC_E`
-    - `UPC_EAN_EXTENSION`
-    </details>
-3. To crop the input image before barcode reading, check `Crop Required` and specify the `Crop Rect`.
-4. For higher accuracy, check `Try Harder`.
-5. To handle barcode reading results, create a component and register it with the `Barcode Read` event. You need to define a public method in your component that takes an array of `BarcodeReadingResult[]` as an argument:
-   ```csharp
-   using UnityEngine;
-   using MediaProjection.Models;
-
-   class ResultHandler : MonoBehaviour
-   {
-       public void ProcessResult(BarcodeReadingResult[] results)
-       {
-           foreach (var result in results)
-           {
-              　string text = result.Text; // raw text encoded by the barcode
-              　string format = result.Format; // format of the barcode that was decoded
-              　byte[] rawBytes = result.RawBytes; // raw bytes encoded by the barcode
-              　Vector2[] resultPoints = result.ResultPoints; // points related to the barcode in the image
-              　long timestamp = result.Timestamp;
-              　
-              　// ...
-           }
-       }
-   }
-   ```
-<p float="left">
-<img src="Images/barcode-reader-component.png" width="300" />
-</p>
-
-### Reading Barcodes with Google MLKit
-
-1. Add the `MlKitBarcodeReaderViewModel` component to a suitable `GameObject` and attach the `MediaProjectionViewModel` component created in the basic setup to its `MediaProjectionViewModel` field.
-2. Select the barcodes to be read from the `PossibleFormats` list (multiple formats can be selected). 
-    <details><summary>Supported barcode formats:</summary>
-
-    - `CODE_128`
-    - `CODE_39`
-    - `CODE_93`
-    - `CODABAR`
-    - `DATA_MATRIX`
-    - `EAN_13`
-    - `EAN_8`
-    - `ITF`
-    - `QR_CODE`
-    - `UPC_A`
-    - `UPC_E`
-    - `PDF417`
-    - `AZTEC`
-    </details>
-3. To handle barcode reading results, create a component and register it with the `Barcode Read` event. Similar to ZXing, you need to define a public method in your component that takes an array of `BarcodeReadingResult[]` as an argument.
-<p float="left">
-<img src="Images/mlkit-barcode-reader-component.png" width="300" />
-</p>
 
 ### Saving Captures
 
