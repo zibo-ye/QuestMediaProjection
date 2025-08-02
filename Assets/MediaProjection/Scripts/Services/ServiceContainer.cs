@@ -9,7 +9,6 @@ namespace MediaProjection.Services
     public class ServiceContainer : MonoBehaviour
     {
         [SerializeField] private bool enableImageProcessing = true;
-        [SerializeField] private bool enableWebRtc = false;
         [SerializeField] private bool enableVideoRecording = true;
 
         private AndroidJavaObject? mediaProjectionCallback;
@@ -79,10 +78,7 @@ namespace MediaProjection.Services
             {
                 using (AndroidJavaObject activity = unityPlayer.GetStatic<AndroidJavaObject>("currentActivity"))
                 {
-                    var mediaProjectionManagerClassName = 
-                        enableWebRtc ? "com.t34400.mediaprojectionlib.webrtc.WebRtcMediaProjectionManager" 
-                            : "com.t34400.mediaprojectionlib.core.MediaProjectionManager";
-                    Debug.Log("MediaProjectionManagerClassName: " + mediaProjectionManagerClassName);
+                    var mediaProjectionManagerClassName = "com.t34400.mediaprojectionlib.core.MediaProjectionManager";
                     
                     mediaProjectionManager = new AndroidJavaObject(
                             mediaProjectionManagerClassName, 
