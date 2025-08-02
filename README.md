@@ -176,26 +176,16 @@ To do this:
     - If you disable it, you will need to request user permission again to restart the projection.  
   - **If you only want to pause Unity-side processing** while keeping `MediaProjection` active, set `enabled = false` on the corresponding `ViewModel` instead.  
 
-  
+
 
 ## AAR Source Code
 [MediaProjectionLib](https://github.com/t-34400/MediaProjectionLib)
 
-## **Acknowledgements**
-This project uses the following libraries:
-
-  
-  
-- [NativeWebSocket](https://github.com/endel/NativeWebSocket), licensed under the [MIT License](https://github.com/endel/NativeWebSocket/blob/master/LICENSE).  
-
-We would like to thank the contributors of these libraries for their work.
 
 ## **License**  
 This project is licensed under the [MIT License](LICENSE).  
 
 If you include the following libraries as dependencies in your Unity project, please ensure compliance with their respective licenses:  
 
-  
-  
 
 Make sure to review and adhere to the licensing terms of these libraries when integrating them into your project.  

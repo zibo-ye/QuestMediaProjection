@@ -29,13 +29,19 @@ namespace MediaProjection.Services
         public RecordingState CurrentState => currentState;
         public bool IsRecording => currentState == RecordingState.Recording;
         public string? CurrentOutputFile => currentOutputFile;
-        
+
         /// <summary>
         /// Initialize the video recording service
         /// </summary>
         public VideoRecordingService()
         {
+            Debug.Log("VideoRecordingService: Initializing...");
             InitializeAndroidObjects();
+            if (videoRecordingManager == null)
+            {
+                Debug.LogError("VideoRecordingService: Failed to initialize VideoRecordingManager");
+                return;
+            }
         }
         
         /// <summary>
@@ -43,6 +49,7 @@ namespace MediaProjection.Services
         /// </summary>
         private void InitializeAndroidObjects()
         {
+            Debug.Log("VideoRecordingService: Initializing Android objects...");
             try
             {
                 // Get Unity activity
@@ -50,23 +57,23 @@ namespace MediaProjection.Services
                 {
                     unityActivity = unityPlayer.GetStatic<AndroidJavaObject>("currentActivity");
                 }
-                
+
                 if (unityActivity == null)
                 {
                     Debug.LogError("VideoRecordingService: Failed to get Unity activity");
                     return;
                 }
-                
+
                 // Create VideoRecordingManager instance
                 videoRecordingManager = new AndroidJavaObject(
                     "com.t34400.mediaprojectionlib.recording.VideoRecordingManager",
                     unityActivity);
-                
+
                 // Setup callbacks using a callback proxy
                 SetupCallbacks();
-                
+
                 Debug.Log("VideoRecordingService: Initialized successfully");
-                
+
             }
             catch (Exception e)
             {

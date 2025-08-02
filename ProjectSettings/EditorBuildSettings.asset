@@ -9,8 +9,8 @@ EditorBuildSettings:
     path: Assets/Scenes/MediaProjectionScene.unity
     guid: 9fc0d4010bbf28b4594072e72b8655ab
   - enabled: 1
-    path: Assets/Scenes/VideoRecordingScene.unity
-    guid: d9b15144789f6c04daca0b587454290b
+    path: Assets/Scenes/VideoRecordingSceneNew.unity
+    guid: 72ea5f12c987e7e45a098b1b083c9153
   m_configObjects:
     com.unity.xr.arfoundation.simulation_settings: {fileID: 11400000, guid: 2b32b1061e6de6644b641b8e01f76aec, type: 2}
     com.unity.xr.management.loader_settings: {fileID: 11400000, guid: 7e37acdcce4510e409eb73d8f9f309ff, type: 2}
